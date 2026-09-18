@@ -1,6 +1,6 @@
-"""Breadth-first Sokoban solver."""
+"""State-space Sokoban solver."""
 
-from sokoban.search import SearchResult, search
+from sokoban.search import Heuristic, SearchResult, search
 from sokoban.solver import BoardState
 from sokoban.transition import apply_action
 
@@ -8,7 +8,13 @@ from sokoban.transition import apply_action
 class BFSSolver:
     """Plan the shortest solution in player actions, then replay it."""
 
-    def __init__(self, *, max_expansions: int | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        heuristic: Heuristic | None = None,
+        max_expansions: int | None = None,
+    ) -> None:
+        self._heuristic = heuristic
         self._max_expansions = max_expansions
         self._plan: tuple[int, ...] = ()
         self._next_action = 0
@@ -18,7 +24,12 @@ class BFSSolver:
     def reset(self, state: BoardState) -> None:
         """Search for a complete plan from ``state``."""
 
-        self.result = search(state, max_expansions=self._max_expansions)
+        self.result = search(
+            state,
+            heuristic=self._heuristic,
+            heuristic_weight=float(self._heuristic is not None),
+            max_expansions=self._max_expansions,
+        )
         if self.result.actions is None:
             raise RuntimeError("BFS found no solution")
         self._plan = self.result.actions

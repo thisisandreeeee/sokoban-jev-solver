@@ -1,5 +1,5 @@
 from sokoban.env import GymSokobanEnv
-from sokoban.search import search
+from sokoban.search import manhattan_distance, search
 from sokoban.solver import SokobanAction
 
 SOLVABLE = "#####\n#@$.#\n#####"
@@ -21,6 +21,12 @@ def test_zero_heuristic_search_finds_shortest_plan() -> None:
     assert result.stats.generated == 2
     assert result.stats.max_frontier == 1
     assert result.stats.elapsed_seconds >= 0
+
+
+def test_manhattan_distance_sums_each_box_to_its_nearest_goal() -> None:
+    state = state_for("#######\n#@ $ .#\n# $  .#\n#######")
+
+    assert manhattan_distance(state) == 5
 
 
 def test_search_reports_when_no_solution_exists() -> None:

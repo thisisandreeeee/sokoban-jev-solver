@@ -13,6 +13,20 @@ from sokoban.transition import apply_action, legal_actions
 Heuristic = Callable[[BoardState], float]
 
 
+def manhattan_distance(state: BoardState) -> float:
+    """Estimate remaining pushes from each box to its nearest goal."""
+
+    return float(
+        sum(
+            min(
+                abs(row - goal_row) + abs(column - goal_column)
+                for goal_row, goal_column in state.goals
+            )
+            for row, column in state.boxes
+        )
+    )
+
+
 @dataclass(frozen=True)
 class SearchStats:
     expanded: int
