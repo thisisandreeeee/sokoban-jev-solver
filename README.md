@@ -6,7 +6,7 @@ levels.
 
 ## Demo
 
-| Microban 10 · 121 moves                                  | Microban 35 · 97 moves                                   | Microban 50 · 88 moves                                   |
+| Microban 10<br>121 moves                                 | Microban 35<br>97 moves                                  | Microban 50<br>88 moves                                  |
 | -------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
 | ![BFS solving Microban level 10](assets/microban-10.gif) | ![BFS solving Microban level 35](assets/microban-35.gif) | ![BFS solving Microban level 50](assets/microban-50.gif) |
 
