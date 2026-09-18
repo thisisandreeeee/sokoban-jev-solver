@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
-from enum import IntEnum
 from textwrap import dedent
 from typing import Any
 
@@ -12,29 +11,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from gym_sokoban.envs.sokoban_env import SokobanEnv
-
-Position = tuple[int, int]
-
-
-class SokobanAction(IntEnum):
-    """Engine-neutral Sokoban actions."""
-
-    UP = 0
-    DOWN = 1
-    LEFT = 2
-    RIGHT = 3
-
-
-@dataclass(frozen=True)
-class BoardState:
-    """Immutable board snapshot passed to solvers."""
-
-    height: int
-    width: int
-    walls: frozenset[Position]
-    goals: frozenset[Position]
-    boxes: frozenset[Position]
-    player: Position
+from sokoban.solver import BoardState, Position, SokobanAction
 
 
 @dataclass(frozen=True)
