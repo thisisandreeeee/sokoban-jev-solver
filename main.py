@@ -21,7 +21,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--fps", type=float, default=8)
     parser.add_argument("--scale", type=int, default=4)
     parser.add_argument("--no-render", action="store_true")
-    parser.add_argument("--level", type=int, default=1, help="Microban level (1-5)")
+    parser.add_argument(
+        "--level", type=int, default=1, help="Microban level (1-155)"
+    )
     parser.add_argument("--solver", choices=("bfs", "random"), default="bfs")
     parser.add_argument("--heuristic", choices=("manhattan",))
     args = parser.parse_args(argv)
