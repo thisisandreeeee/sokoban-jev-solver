@@ -8,12 +8,17 @@ version = "0.1.0"
 description = "A modular experiment framework for Sokoban solvers."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
     "gym==0.26.2",
     "gym-sokoban",
+    "pygame-ce>=2.5",
     "setuptools<81",
 ]
+
+[project.scripts]
+sokoban-demo = "main:main"
 
 [dependency-groups]
 dev = [
@@ -22,6 +27,12 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["sokoban*"]
+
+[tool.setuptools]
+py-modules = ["main"]
+
+[tool.setuptools.package-data]
+"sokoban.levels" = ["*.xsb"]
 
 [tool.uv.sources]
 gym-sokoban = { git = "https://github.com/mpSchrader/gym-sokoban.git", rev = "8e06e44e8bf3bb8bc73eeb1e7f0354508ce3fc89" }
