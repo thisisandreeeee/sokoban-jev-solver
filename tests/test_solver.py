@@ -1,5 +1,6 @@
+from sokoban.env import GymSokobanEnv
 from sokoban.solver import BoardState, SokobanAction, SokobanSolver
-from sokoban.solvers import RandomSolver
+from sokoban.solvers import BFSSolver, RandomSolver
 
 STATE = BoardState(
     height=3,
@@ -28,3 +29,18 @@ def test_random_solver_reset_restarts_seeded_sequence() -> None:
     second = [solver.act(STATE) for _ in range(10)]
 
     assert first == second
+
+
+def test_bfs_solver_plans_and_executes_solution() -> None:
+    env = GymSokobanEnv("#####\n#@$.#\n#####")
+    state = env.reset()
+    solver = BFSSolver()
+
+    solver.reset(state)
+    result = env.step(solver.act(state))
+    env.close()
+
+    assert isinstance(solver, SokobanSolver)
+    assert result.solved
+    assert solver.result is not None
+    assert solver.result.actions == (SokobanAction.RIGHT,)
