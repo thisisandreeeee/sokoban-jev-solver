@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 Position = tuple[int, int]
 
@@ -26,6 +26,18 @@ class BoardState:
     goals: frozenset[Position]
     boxes: frozenset[Position]
     player: Position
+
+
+@dataclass(frozen=True)
+class StepResult:
+    """Engine-neutral result of one environment action."""
+
+    state: BoardState
+    reward: float
+    solved: bool
+    terminated: bool
+    truncated: bool
+    info: dict[str, Any]
 
 
 @runtime_checkable

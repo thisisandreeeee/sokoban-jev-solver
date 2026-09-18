@@ -5,25 +5,12 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass
 from textwrap import dedent
-from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
 
 from gym_sokoban.envs.sokoban_env import SokobanEnv
-from sokoban.solver import BoardState, Position, SokobanAction
-
-
-@dataclass(frozen=True)
-class StepResult:
-    """Normalized result of one environment action."""
-
-    state: BoardState
-    reward: float
-    solved: bool
-    terminated: bool
-    truncated: bool
-    info: dict[str, Any]
+from sokoban.solver import BoardState, Position, SokobanAction, StepResult
 
 
 @dataclass(frozen=True)
