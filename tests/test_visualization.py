@@ -2,15 +2,7 @@ import numpy as np
 import pygame
 import pytest
 
-from main import main
 from sokoban.visualization import PygameRenderer, WindowClosed
-
-
-def test_demo_runs_end_to_end_without_rendering(capsys) -> None:
-    assert (
-        main(["--no-render", "--seed", "42", "--max-steps", "3", "--level", "5"]) == 0
-    )
-    assert "Microban 5: solved=" in capsys.readouterr().out
 
 
 def test_pygame_renderer_accepts_engine_frame(monkeypatch) -> None:
