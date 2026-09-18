@@ -42,7 +42,7 @@ def parse_levels(text: str) -> tuple[Level, ...]:
 
 
 def load_bundled_levels() -> tuple[Level, ...]:
-    """Load the five bundled Microban levels."""
+    """Load the complete 155-level Microban collection."""
 
     return parse_levels(files(__package__).joinpath("microban.xsb").read_text())
 
