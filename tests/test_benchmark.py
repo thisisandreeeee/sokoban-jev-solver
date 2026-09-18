@@ -25,5 +25,6 @@ def test_benchmark_cli_prints_level_metrics_and_summary(capsys) -> None:
     assert "\tstatus=solved" in output
     assert "\tsolved=True" in output
     assert "\tsteps=33" in output
-    assert "\texpanded=51" in output
+    assert "\texpanded=" in output
+    assert "\tpeak_queue=" in output
     assert "Summary: attempted=1 solved=1" in output

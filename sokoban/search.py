@@ -12,7 +12,6 @@ from sokoban.solver import BoardState, Position
 from sokoban.transition import apply_action, legal_actions
 
 Heuristic = Callable[[BoardState], float]
-MoveHeuristic = Callable[[BoardState, tuple[int, ...], int], float]
 SearchStatus = Literal["solved", "exhausted", "max_expansions"]
 SearchKey = tuple[frozenset[Position], Position]
 
@@ -50,7 +49,6 @@ def search(
     *,
     heuristic: Heuristic | None = None,
     heuristic_weight: float = 0.0,
-    move_heuristic: MoveHeuristic | None = None,
     max_expansions: int | None = None,
 ) -> SearchResult:
     """Find a push-minimal solution using ``pushes + weight * heuristic``."""
@@ -70,7 +68,6 @@ def search(
     parents: dict[SearchKey, tuple[SearchKey, tuple[int, ...]] | None] = {
         initial_key: None
     }
-    histories = {initial_key: ()}
     heuristic_cache: dict[SearchKey, float] = {}
     expanded = 0
     peak_queue = 1
@@ -103,7 +100,6 @@ def search(
 
             best_cost[successor_key] = successor_cost
             parents[successor_key] = (key, actions)
-            histories[successor_key] = (*histories[key], *actions)
             priority = float(successor_cost)
             if heuristic is not None and heuristic_weight:
                 if successor_key not in heuristic_cache:
@@ -112,21 +108,6 @@ def search(
                         raise ValueError("heuristic must return a finite number")
                     heuristic_cache[successor_key] = value
                 priority += heuristic_weight * heuristic_cache[successor_key]
-            if move_heuristic is not None:
-                move_state = state
-                for action in actions[:-1]:
-                    move_state = apply_action(move_state, action)
-                    assert move_state is not None
-                value = float(
-                    move_heuristic(
-                        move_state,
-                        (*histories[key], *actions[:-1]),
-                        actions[-1],
-                    )
-                )
-                if not isfinite(value):
-                    raise ValueError("move heuristic must return a finite number")
-                priority += value
             heappush(
                 frontier,
                 (priority, next(order), successor_cost, successor_key, successor),
@@ -187,9 +168,29 @@ def _push_successors(
         for action in legal_actions(walking_state):
             successor = apply_action(walking_state, action)
             assert successor is not None
-            if successor.boxes != state.boxes:
+            if successor.boxes != state.boxes and not _has_static_deadlock(successor):
                 successors.append((successor, (*path, action)))
     return tuple(successors)
+
+
+def _has_static_deadlock(state: BoardState) -> bool:
+    """Return whether a non-goal box is stuck in a wall corner."""
+
+    def blocked(row: int, column: int) -> bool:
+        return (
+            row < 0
+            or row >= state.height
+            or column < 0
+            or column >= state.width
+            or (row, column) in state.walls
+        )
+
+    return any(
+        box not in state.goals
+        and (blocked(box[0] - 1, box[1]) or blocked(box[0] + 1, box[1]))
+        and (blocked(box[0], box[1] - 1) or blocked(box[0], box[1] + 1))
+        for box in state.boxes
+    )
 
 
 def _key(

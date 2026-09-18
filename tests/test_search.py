@@ -66,3 +66,12 @@ def test_zero_weight_does_not_evaluate_heuristic() -> None:
     )
 
     assert result.actions == (SokobanAction.RIGHT,)
+
+
+def test_search_filters_static_corner_deadlocks() -> None:
+    result = search(
+        state_for("#####\n#  .#\n#$  #\n#@  #\n#   #\n#####"),
+        max_expansions=2,
+    )
+
+    assert result.status == "exhausted"

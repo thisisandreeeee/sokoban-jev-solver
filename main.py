@@ -26,7 +26,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--solver", choices=("bfs", "random"), default="bfs")
     parser.add_argument("--heuristic", choices=("manhattan",), default="manhattan")
-    parser.add_argument("--jev", action="store_true", help="add the Jev move heuristic")
     args = parser.parse_args(argv)
 
     try:
@@ -38,8 +37,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     renderer = None if args.no_render else PygameRenderer(scale=args.scale, fps=args.fps)
     if args.solver == "bfs":
         solver = BFSSolver(
-            heuristic=manhattan_distance if args.heuristic == "manhattan" else None,
-            jev=args.jev,
+            heuristic=manhattan_distance if args.heuristic == "manhattan" else None
         )
     else:
         solver = RandomSolver(seed=args.seed)
@@ -60,8 +58,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             if stats is not None
             else ", expanded=n/a, peak_queue=n/a"
         )
-        if args.jev:
-            metrics += f", api_calls={getattr(solver, 'api_calls', 0)}"
         print(
             f"{level.name}: solved={result.solved}, "
             f"steps={result.num_steps}, time={elapsed:.3f}s{metrics}"
