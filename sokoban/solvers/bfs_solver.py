@@ -6,7 +6,7 @@ from sokoban.transition import apply_action
 
 
 class BFSSolver:
-    """Plan the shortest solution in player actions, then replay it."""
+    """Plan a minimum-push solution, then replay its player actions."""
 
     def __init__(
         self,

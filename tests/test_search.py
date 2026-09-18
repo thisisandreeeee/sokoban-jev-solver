@@ -23,6 +23,18 @@ def test_zero_heuristic_search_finds_shortest_plan() -> None:
     assert result.stats.elapsed_seconds >= 0
 
 
+def test_search_collapses_walking_into_push_edges() -> None:
+    result = search(state_for("#######\n#@ $ .#\n#######"))
+
+    assert result.status == "solved"
+    assert result.actions == (
+        SokobanAction.RIGHT,
+        SokobanAction.RIGHT,
+        SokobanAction.RIGHT,
+    )
+    assert result.stats.expanded == 2
+
+
 def test_manhattan_distance_sums_each_box_to_its_nearest_goal() -> None:
     state = state_for("#######\n#@ $ .#\n# $  .#\n#######")
 
@@ -37,7 +49,7 @@ def test_search_reports_when_no_solution_exists() -> None:
 
 
 def test_search_reports_expansion_limit() -> None:
-    result = search(state_for("######\n#@ $.#\n######"), max_expansions=1)
+    result = search(state_for("#######\n#@ $ .#\n#######"), max_expansions=1)
 
     assert result.status == "max_expansions"
     assert result.actions is None

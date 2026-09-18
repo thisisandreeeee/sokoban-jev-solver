@@ -5,7 +5,7 @@ from sokoban.levels import Level
 def test_benchmark_collects_metrics_and_continues_after_limit() -> None:
     levels = (
         (1, Level("Easy", "#####\n#@$.#\n#####")),
-        (2, Level("Limited", "######\n#@ $.#\n######")),
+        (2, Level("Limited", "#######\n#@ $ .#\n#######")),
     )
 
     results = run_benchmark(levels, max_expansions=1)
@@ -26,5 +26,5 @@ def test_benchmark_cli_prints_level_metrics_and_summary(capsys) -> None:
     assert "\tstatus=solved" in output
     assert "\tsolved=True" in output
     assert "\tsteps=33" in output
-    assert "\texpanded=571" in output
+    assert "\texpanded=51" in output
     assert "Summary: attempted=1 solved=1" in output
