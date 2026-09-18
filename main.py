@@ -10,7 +10,7 @@ from sokoban.env import GymSokobanEnv
 from sokoban.levels import load_bundled_levels, select_level
 from sokoban.runner import run_episode
 from sokoban.search import manhattan_distance
-from sokoban.solvers import BFSSolver, RandomSolver
+from sokoban.solvers import BFSSolver, JevSolver, RandomSolver
 from sokoban.visualization import PygameRenderer, WindowClosed
 
 
@@ -24,8 +24,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--level", type=int, default=1, help="Microban level (1-155)"
     )
-    parser.add_argument("--solver", choices=("bfs", "random"), default="bfs")
-    parser.add_argument("--heuristic", choices=("manhattan",))
+    parser.add_argument("--solver", choices=("bfs", "jev", "random"), default="bfs")
+    parser.add_argument("--heuristic", choices=("manhattan",), default="manhattan")
     args = parser.parse_args(argv)
 
     try:
@@ -35,13 +35,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     env = GymSokobanEnv(level.board, max_steps=args.max_steps)
     renderer = None if args.no_render else PygameRenderer(scale=args.scale, fps=args.fps)
-    solver = (
-        BFSSolver(
+    if args.solver == "bfs":
+        solver = BFSSolver(
             heuristic=manhattan_distance if args.heuristic == "manhattan" else None
         )
-        if args.solver == "bfs"
-        else RandomSolver(seed=args.seed)
-    )
+    elif args.solver == "jev":
+        solver = JevSolver()
+    else:
+        solver = RandomSolver(seed=args.seed)
 
     try:
         started = perf_counter()
