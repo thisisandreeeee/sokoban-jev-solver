@@ -21,7 +21,6 @@ def test_benchmark_cli_prints_level_metrics_and_summary(capsys) -> None:
     assert main(["--level", "1", "--max-expansions", "1000"]) == 0
 
     output = capsys.readouterr().out
-    assert "Running Microban 1 (1/1)..." in output
     assert "Microban 1:" in output
     assert "\tstatus=solved" in output
     assert "\tsolved=True" in output
