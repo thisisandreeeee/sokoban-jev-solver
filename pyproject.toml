@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-sokoban-demo = "main:main"
+sokoban-solver = "main:main"
 
 [dependency-groups]
 dev = [
@@ -32,7 +32,7 @@ include = ["sokoban*"]
 py-modules = ["main"]
 
 [tool.setuptools.package-data]
-"sokoban.levels" = ["*.xsb"]
+"sokoban.levels" = ["*.xsb", "README.md"]
 
 [tool.uv.sources]
 gym-sokoban = { git = "https://github.com/mpSchrader/gym-sokoban.git", rev = "8e06e44e8bf3bb8bc73eeb1e7f0354508ce3fc89" }
