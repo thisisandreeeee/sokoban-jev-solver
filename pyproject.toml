@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68,<81"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sokoban-jev-solver"
+version = "0.1.0"
+description = "A modular experiment framework for Sokoban solvers."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+dependencies = [
+    "gym==0.26.2",
+    "gym-sokoban",
+    "setuptools<81",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+]
+
+[tool.setuptools.packages.find]
+include = ["sokoban*"]
+
+[tool.uv.sources]
+gym-sokoban = { git = "https://github.com/mpSchrader/gym-sokoban.git", rev = "8e06e44e8bf3bb8bc73eeb1e7f0354508ce3fc89" }
