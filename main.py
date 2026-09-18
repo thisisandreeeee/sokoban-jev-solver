@@ -1,12 +1,12 @@
-"""Run the random solver against Microban level 1."""
+"""Run a Sokoban solver against a selected XSB level."""
 
 from __future__ import annotations
 
 import argparse
-from importlib.resources import files
 from typing import Sequence
 
 from sokoban.env import GymSokobanEnv
+from sokoban.levels import load_bundled_levels, select_level
 from sokoban.runner import run_episode
 from sokoban.solvers import RandomSolver
 from sokoban.visualization import PygameRenderer, WindowClosed
@@ -19,10 +19,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--fps", type=float, default=8)
     parser.add_argument("--scale", type=int, default=4)
     parser.add_argument("--no-render", action="store_true")
+    parser.add_argument("--level", type=int, default=1, help="Microban level (1-5)")
     args = parser.parse_args(argv)
 
-    level = files("sokoban.levels").joinpath("microban_001.xsb").read_text()
-    env = GymSokobanEnv(level, max_steps=args.max_steps)
+    try:
+        level = select_level(load_bundled_levels(), args.level)
+    except ValueError as error:
+        parser.error(str(error))
+
+    env = GymSokobanEnv(level.board, max_steps=args.max_steps)
     renderer = None if args.no_render else PygameRenderer(scale=args.scale, fps=args.fps)
 
     try:
@@ -32,7 +37,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             max_steps=args.max_steps,
             render=renderer,
         )
-        print(f"Microban 1: solved={result.solved}, steps={result.num_steps}")
+        print(f"{level.name}: solved={result.solved}, steps={result.num_steps}")
         if renderer is not None:
             renderer.wait_until_closed()
     except WindowClosed:
