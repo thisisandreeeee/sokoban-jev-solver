@@ -5,12 +5,13 @@ from heapq import heappop, heappush
 from itertools import count
 from math import isfinite
 from time import perf_counter
-from typing import Callable
+from typing import Callable, Literal
 
 from sokoban.solver import BoardState
 from sokoban.transition import apply_action, legal_actions
 
 Heuristic = Callable[[BoardState], float]
+SearchStatus = Literal["solved", "exhausted", "max_expansions"]
 
 
 def manhattan_distance(state: BoardState) -> float:
@@ -30,13 +31,13 @@ def manhattan_distance(state: BoardState) -> float:
 @dataclass(frozen=True)
 class SearchStats:
     expanded: int
-    generated: int
-    max_frontier: int
+    peak_queue: int
     elapsed_seconds: float
 
 
 @dataclass(frozen=True)
 class SearchResult:
+    status: SearchStatus
     actions: tuple[int, ...] | None
     stats: SearchStats
 
@@ -65,8 +66,8 @@ def search(
     }
     heuristic_cache: dict[BoardState, float] = {}
     expanded = 0
-    generated = 1
-    max_frontier = 1
+    peak_queue = 1
+    limit_reached = False
 
     while frontier:
         _, _, cost, state = heappop(frontier)
@@ -74,13 +75,14 @@ def search(
             continue
         if state.boxes == state.goals:
             return _result(
+                "solved",
                 _reconstruct(state, parents),
                 started,
                 expanded,
-                generated,
-                max_frontier,
+                peak_queue,
             )
         if max_expansions is not None and expanded >= max_expansions:
+            limit_reached = True
             break
 
         expanded += 1
@@ -106,10 +108,10 @@ def search(
                 frontier,
                 (priority, next(order), successor_cost, successor),
             )
-            generated += 1
-        max_frontier = max(max_frontier, len(frontier))
+        peak_queue = max(peak_queue, len(frontier))
 
-    return _result(None, started, expanded, generated, max_frontier)
+    status: SearchStatus = "max_expansions" if limit_reached else "exhausted"
+    return _result(status, None, started, expanded, peak_queue)
 
 
 def _reconstruct(
@@ -126,18 +128,18 @@ def _reconstruct(
 
 
 def _result(
+    status: SearchStatus,
     actions: tuple[int, ...] | None,
     started: float,
     expanded: int,
-    generated: int,
-    max_frontier: int,
+    peak_queue: int,
 ) -> SearchResult:
     return SearchResult(
+        status=status,
         actions=actions,
         stats=SearchStats(
             expanded=expanded,
-            generated=generated,
-            max_frontier=max_frontier,
+            peak_queue=peak_queue,
             elapsed_seconds=perf_counter() - started,
         ),
     )

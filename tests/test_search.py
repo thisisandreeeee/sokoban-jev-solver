@@ -16,10 +16,10 @@ def state_for(level: str):
 def test_zero_heuristic_search_finds_shortest_plan() -> None:
     result = search(state_for(SOLVABLE))
 
+    assert result.status == "solved"
     assert result.actions == (SokobanAction.RIGHT,)
     assert result.stats.expanded == 1
-    assert result.stats.generated == 2
-    assert result.stats.max_frontier == 1
+    assert result.stats.peak_queue == 1
     assert result.stats.elapsed_seconds >= 0
 
 
@@ -32,6 +32,14 @@ def test_manhattan_distance_sums_each_box_to_its_nearest_goal() -> None:
 def test_search_reports_when_no_solution_exists() -> None:
     result = search(state_for(UNSOLVABLE))
 
+    assert result.status == "exhausted"
+    assert result.actions is None
+
+
+def test_search_reports_expansion_limit() -> None:
+    result = search(state_for("######\n#@ $.#\n######"), max_expansions=1)
+
+    assert result.status == "max_expansions"
     assert result.actions is None
 
 
