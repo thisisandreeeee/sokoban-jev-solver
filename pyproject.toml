@@ -14,7 +14,9 @@ dependencies = [
     "gym==0.26.2",
     "gym-sokoban",
     "pygame-ce>=2.5",
+    "python-dotenv>=1.0",
     "setuptools<81",
+    "typesafe-sdk>=0.6.0",
 ]
 
 [project.scripts]
