@@ -62,6 +62,17 @@ def test_environment_step_limit_is_truncation() -> None:
     assert result.truncated
 
 
+def test_environment_terminates_when_no_box_has_a_legal_push() -> None:
+    env = GymSokobanEnv("#####\n#@  #\n#$#.#\n#####")
+    env.reset()
+    result = env.step(SokobanAction.RIGHT)
+    env.close()
+
+    assert not result.solved
+    assert result.terminated
+    assert not result.truncated
+
+
 def test_render_rgb_uses_engine_renderer() -> None:
     env = GymSokobanEnv(LEVEL)
     env.reset()

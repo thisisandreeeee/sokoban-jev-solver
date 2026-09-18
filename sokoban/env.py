@@ -2,14 +2,23 @@
 
 from __future__ import annotations
 
+import warnings
 from collections import deque
+from contextlib import redirect_stderr
 from dataclasses import dataclass
+from io import StringIO
 from textwrap import dedent
 
 import numpy as np
 from numpy.typing import NDArray
 
-from gym_sokoban.envs.sokoban_env import SokobanEnv
+with warnings.catch_warnings(), redirect_stderr(StringIO()):
+    warnings.filterwarnings(
+        "ignore",
+        message="pkg_resources is deprecated as an API.*",
+        category=UserWarning,
+    )
+    from gym_sokoban.envs.sokoban_env import SokobanEnv
 from sokoban.solver import BoardState, Position, SokobanAction, StepResult
 
 
@@ -85,12 +94,14 @@ class GymSokobanEnv:
         )
         state = self._snapshot()
         solved = state.boxes == state.goals
+        deadlocked = _is_deadlocked(state)
+        terminated = solved or deadlocked
         return StepResult(
             state=state,
             reward=float(reward),
             solved=solved,
-            terminated=solved,
-            truncated=bool(done and not solved),
+            terminated=terminated,
+            truncated=bool(done and not terminated),
             info={
                 "moved_player": bool(engine_info["action.moved_player"]),
                 "moved_box": bool(engine_info["action.moved_box"]),
@@ -124,6 +135,45 @@ class GymSokobanEnv:
 
 def _positions(mask: NDArray[np.bool_]) -> frozenset[Position]:
     return frozenset((int(row), int(column)) for row, column in np.argwhere(mask))
+
+
+def _is_deadlocked(state: BoardState) -> bool:
+    """Return whether no box has a legal push in the current state."""
+
+    if state.boxes == state.goals:
+        return False
+
+    blocked = state.walls | state.boxes
+    reachable = {state.player}
+    pending = deque([state.player])
+    directions = ((-1, 0), (1, 0), (0, -1), (0, 1))
+
+    while pending:
+        row, column = pending.popleft()
+        for row_delta, column_delta in directions:
+            position = (row + row_delta, column + column_delta)
+            if (
+                0 <= position[0] < state.height
+                and 0 <= position[1] < state.width
+                and position not in blocked
+                and position not in reachable
+            ):
+                reachable.add(position)
+                pending.append(position)
+
+    for row, column in state.boxes:
+        for row_delta, column_delta in directions:
+            destination = (row + row_delta, column + column_delta)
+            pushing_position = (row - row_delta, column - column_delta)
+            if (
+                0 <= destination[0] < state.height
+                and 0 <= destination[1] < state.width
+                and destination not in blocked
+                and pushing_position in reachable
+            ):
+                return False
+
+    return True
 
 
 def _parse_xsb(level: str) -> _ParsedLevel:
