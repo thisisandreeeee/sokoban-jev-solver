@@ -19,6 +19,7 @@ dependencies = [
 
 [project.scripts]
 sokoban-solver = "main:main"
+sokoban-benchmark = "sokoban.benchmark:main"
 
 [dependency-groups]
 dev = [
