@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from sokoban.env import GymSokobanEnv
 from sokoban.solver import BoardState, SokobanAction, SokobanSolver
-from sokoban.solvers import BFSSolver, JevSolver, RandomSolver
+from sokoban.solvers import BFSSolver, RandomSolver
 
 STATE = BoardState(
     height=3,
@@ -48,46 +48,56 @@ def test_bfs_solver_plans_and_executes_solution() -> None:
     assert solver.result.actions == (SokobanAction.RIGHT,)
 
 
-def test_jev_solver_passes_board_and_move_history_and_uses_top_choice() -> None:
+def test_bfs_adds_jev_move_score_to_geometry_heuristic() -> None:
     class FakeClient:
         calls: list[dict[str, object]] = []
 
         def system_one(self, **kwargs: object) -> object:
             self.calls.append(kwargs)
-            choice = type("ChoiceAnswer", (), {"choice": "right"})()
-            return type("Response", (), {"choices": {"move": choice}})()
+            answer = type("NoulAnswer", (), {"noul": 1.0})()
+            return type("Response", (), {"nouls": {"move": answer}})()
 
     client = FakeClient()
-    solver = JevSolver(client)  # type: ignore[arg-type]
-    solver.reset(STATE)
+    geometry_calls: list[BoardState] = []
+    state = BoardState(
+        height=3,
+        width=6,
+        walls=frozenset(),
+        goals=frozenset({(1, 4)}),
+        boxes=frozenset({(1, 3)}),
+        player=(1, 1),
+    )
 
-    assert solver.act(STATE) == SokobanAction.RIGHT
+    def geometry(state: BoardState) -> float:
+        geometry_calls.append(state)
+        return 0.0
+
+    solver = BFSSolver(heuristic=geometry, client=client)  # type: ignore[arg-type]
+    solver.reset(state)
+
+    assert solver.act(state) == SokobanAction.RIGHT
+    assert geometry_calls
+    assert solver.api_calls == len(client.calls)
     assert client.calls[0]["state"] == {
         "board": {
             "height": 3,
-            "width": 5,
+            "width": 6,
             "walls": [],
-            "goals": [(1, 3)],
-            "boxes": [(1, 2)],
-            "player": (1, 1),
+            "goals": [(1, 4)],
+            "boxes": [(1, 3)],
+            "player": (1, 2),
         },
-        "past_moves": [],
+        "history": ["R"],
     }
+    question = client.calls[0]["questions"]["move"]  # type: ignore[index]
+    assert question.instructions == "is this a good move: R"
 
-    solver.act(STATE)
-    assert client.calls[1]["state"]["past_moves"] == ["right"]  # type: ignore[index]
-
-    solver.reset(STATE)
-    solver.act(STATE)
-    assert client.calls[2]["state"]["past_moves"] == []  # type: ignore[index]
-
-
-def test_jev_solver_loads_dotenv_before_creating_client() -> None:
+def test_bfs_jev_loads_dotenv_before_creating_client() -> None:
     with (
-        patch("sokoban.solvers.jev_solver.load_dotenv") as load_dotenv,
-        patch("sokoban.solvers.jev_solver.TypeSafeClient") as client,
+        patch("sokoban.solvers.bfs_solver.load_dotenv") as load_dotenv,
+        patch("sokoban.solvers.bfs_solver.TypeSafeClient") as client,
     ):
-        JevSolver()
+        BFSSolver(jev=True)
 
     load_dotenv.assert_called_once_with()
     client.assert_called_once_with()

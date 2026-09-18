@@ -1,7 +1,10 @@
 """State-space Sokoban solver."""
 
-from sokoban.search import Heuristic, SearchResult, search
-from sokoban.solver import BoardState
+from dotenv import load_dotenv
+from typesafe_sdk import Noul, TypeSafeClient
+
+from sokoban.search import Heuristic, MoveHeuristic, SearchResult, search
+from sokoban.solver import BoardState, SokobanAction
 from sokoban.transition import apply_action
 
 
@@ -12,22 +15,34 @@ class BFSSolver:
         self,
         *,
         heuristic: Heuristic | None = None,
+        jev: bool = False,
+        client: TypeSafeClient | None = None,
         max_expansions: int | None = None,
     ) -> None:
+        if jev and client is None:
+            load_dotenv()
+            client = TypeSafeClient()
         self._heuristic = heuristic
+        self._jev_heuristic: MoveHeuristic | None = (
+            self._score_move if client is not None else None
+        )
+        self._client = client
         self._max_expansions = max_expansions
         self._plan: tuple[int, ...] = ()
         self._next_action = 0
         self._expected_state: BoardState | None = None
         self.result: SearchResult | None = None
+        self.api_calls = 0
 
     def reset(self, state: BoardState) -> None:
         """Search for a complete plan from ``state``."""
 
+        self.api_calls = 0
         self.result = search(
             state,
             heuristic=self._heuristic,
             heuristic_weight=float(self._heuristic is not None),
+            move_heuristic=self._jev_heuristic,
             max_expansions=self._max_expansions,
         )
         if self.result.actions is None:
@@ -52,3 +67,29 @@ class BFSSolver:
         assert successor is not None
         self._expected_state = successor
         return action
+
+    def _score_move(
+        self, state: BoardState, history: tuple[int, ...], action: int
+    ) -> float:
+        """Return Jev's bad-move probability for one search edge."""
+
+        assert self._client is not None
+        move = SokobanAction(action).name[0]
+        self.api_calls += 1
+        response = self._client.system_one(
+            state={
+                "board": {
+                    "height": state.height,
+                    "width": state.width,
+                    "walls": sorted(state.walls),
+                    "goals": sorted(state.goals),
+                    "boxes": sorted(state.boxes),
+                    "player": state.player,
+                },
+                "history": [SokobanAction(item).name[0] for item in history],
+            },
+            questions={
+                "move": Noul(instructions=f"is this a good move: {move}"),
+            },
+        )
+        return 1.0 - response.nouls["move"].noul

@@ -10,7 +10,7 @@ from sokoban.env import GymSokobanEnv
 from sokoban.levels import load_bundled_levels, select_level
 from sokoban.runner import run_episode
 from sokoban.search import manhattan_distance
-from sokoban.solvers import BFSSolver, JevSolver, RandomSolver
+from sokoban.solvers import BFSSolver, RandomSolver
 from sokoban.visualization import PygameRenderer, WindowClosed
 
 
@@ -24,8 +24,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--level", type=int, default=1, help="Microban level (1-155)"
     )
-    parser.add_argument("--solver", choices=("bfs", "jev", "random"), default="bfs")
+    parser.add_argument("--solver", choices=("bfs", "random"), default="bfs")
     parser.add_argument("--heuristic", choices=("manhattan",), default="manhattan")
+    parser.add_argument("--jev", action="store_true", help="add the Jev move heuristic")
     args = parser.parse_args(argv)
 
     try:
@@ -37,10 +38,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     renderer = None if args.no_render else PygameRenderer(scale=args.scale, fps=args.fps)
     if args.solver == "bfs":
         solver = BFSSolver(
-            heuristic=manhattan_distance if args.heuristic == "manhattan" else None
+            heuristic=manhattan_distance if args.heuristic == "manhattan" else None,
+            jev=args.jev,
         )
-    elif args.solver == "jev":
-        solver = JevSolver()
     else:
         solver = RandomSolver(seed=args.seed)
 
@@ -53,9 +53,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             render=renderer,
         )
         elapsed = perf_counter() - started
+        search_result = getattr(solver, "result", None)
+        stats = search_result.stats if search_result is not None else None
+        metrics = (
+            f", expanded={stats.expanded}, peak_queue={stats.peak_queue}"
+            if stats is not None
+            else ", expanded=n/a, peak_queue=n/a"
+        )
+        if args.jev:
+            metrics += f", api_calls={getattr(solver, 'api_calls', 0)}"
         print(
             f"{level.name}: solved={result.solved}, "
-            f"steps={result.num_steps}, time={elapsed:.3f}s"
+            f"steps={result.num_steps}, time={elapsed:.3f}s{metrics}"
         )
         if renderer is not None:
             renderer.wait_until_closed()
