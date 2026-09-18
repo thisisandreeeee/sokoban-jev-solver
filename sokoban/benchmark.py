@@ -103,7 +103,7 @@ def _print_result(result: BenchmarkResult) -> None:
         f"{'steps=' + _value(result.solution_steps):<13}",
         f"{'expanded=' + _value(stats.expanded if stats else None):<18}",
         f"{'peak_queue=' + _value(stats.peak_queue if stats else None):<18}",
-        f"search_s={stats.elapsed_seconds if stats else 0:.3f}",
+        f"{'search_s=' + format(stats.elapsed_seconds if stats else 0, '.3f'):<18}",
         f"total_s={result.total_seconds:.3f}",
     )
     print(
